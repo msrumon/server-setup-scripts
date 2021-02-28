@@ -2,9 +2,6 @@
 
 set -e
 
-MSR_SCRIPT_DIRECTORY="$(cd "$(dirname $BASH_SOURCE)" && pwd)"
-source "$MSR_SCRIPT_DIRECTORY/lib/common.sh"
-
 function prompt4username() {
   local username
 
@@ -50,7 +47,7 @@ function installRequiredPackage() {
   local required=$1
 
   if ! isInstalled $required; then
-    installPackage $required
+    installPackages $required
   fi
 }
 
@@ -68,31 +65,39 @@ function setupBasicFirewall() {
   ufw --force enable
 }
 
-if ! isRoot; then
-  printMessage "[ERR] Please run this script as 'root' user!" $MSR_COLOR_ERROR 0 0
-  exit
-fi
+function main() {
+  MSR_SCRIPT_DIRECTORY="$(cd "$(dirname $BASH_SOURCE)" && pwd)"
+  source "$MSR_SCRIPT_DIRECTORY/lib/variables.sh"
+  source "$MSR_SCRIPT_DIRECTORY/lib/functions.sh"
 
-printMessage "*** Initial Server Setup ***" $MSR_COLOR_TITLE 1 0
+  if ! isRoot; then
+    printMessage "[ERR] Please run this script as 'root' user!" $MSR_COLOR_ERROR 0 0
+    exit
+  fi
 
-printMessage "(1) Update packages:" $MSR_COLOR_TASK 1 0
-runAptitude
-printMessage "[OK] All packages have been checked!" $MSR_COLOR_SUCCESS 0 0
+  printMessage "*** Initial Server Setup ***" $MSR_COLOR_TITLE 1 0
 
-printMessage "(2) Add new user:" $MSR_COLOR_TASK 1 0
-MSR_USERNAME=$(prompt4username)
-MSR_PASSWORD=$(prompt4password $MSR_USERNAME)
-addUser $MSR_USERNAME $MSR_PASSWORD
-grantPrivilege $MSR_USERNAME
-printMessage "[OK] A user '$MSR_USERNAME' has been configured!" $MSR_COLOR_SUCCESS 0 0
+  printMessage "(1) Update packages:" $MSR_COLOR_TASK 1 0
+  runAptitude
+  printMessage "[OK] All packages have been checked!" $MSR_COLOR_SUCCESS 0 0
 
-printMessage "(3) Disable 'root' login through SSH:" $MSR_COLOR_TASK 1 0
-disableRootLogin
-printMessage "[OK] Logging in as 'root' has been disabled!" $MSR_COLOR_SUCCESS 0 0
+  printMessage "(2) Add new user:" $MSR_COLOR_TASK 1 0
+  MSR_USERNAME=$(prompt4username)
+  MSR_PASSWORD=$(prompt4password $MSR_USERNAME)
+  addUser $MSR_USERNAME $MSR_PASSWORD
+  grantPrivilege $MSR_USERNAME
+  printMessage "[OK] A user '$MSR_USERNAME' has been configured!" $MSR_COLOR_SUCCESS 0 0
 
-printMessage "(4) Setup firewall:" $MSR_COLOR_TASK 1 0
-setupBasicFirewall
-printMessage "[OK] 'UFW' firewall has been setup!" $MSR_COLOR_SUCCESS 0 0
+  printMessage "(3) Disable 'root' login through SSH:" $MSR_COLOR_TASK 1 0
+  disableRootLogin
+  printMessage "[OK] Logging in as 'root' has been disabled!" $MSR_COLOR_SUCCESS 0 0
 
-service sshd restart
-printMessage "\xE2\x9C\x94 Setup is completed!" MSR_COLOR_COMPLETE 1 0
+  printMessage "(4) Setup firewall:" $MSR_COLOR_TASK 1 0
+  setupBasicFirewall
+  printMessage "[OK] 'UFW' firewall has been setup!" $MSR_COLOR_SUCCESS 0 0
+
+  service sshd restart
+  printMessage "\xE2\x9C\x94 Setup is completed!" $MSR_COLOR_COMPLETE 1 0
+}
+
+main

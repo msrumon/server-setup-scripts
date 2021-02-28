@@ -1,8 +1,4 @@
-MSR_COLOR_TITLE="1;95"
-MSR_COLOR_TASK="94"
-MSR_COLOR_ERROR="91"
-MSR_COLOR_SUCCESS="92"
-MSR_COLOR_COMPLETE="1;96"
+#!/bin/bash
 
 function printMessage() {
   local message=$1
@@ -44,7 +40,7 @@ function isInstalled() {
   [[ $? == 0 ]]
 }
 
-function installPackage() {
+function installPackages() {
   local package=$1
 
   apt install $package -y
